@@ -150,7 +150,7 @@ static int pushresult(lua_State *L, int i, const char *info)
 */
 static int change_dir (lua_State *L) {
         const char *path = luaL_checkstring(L, 1);
-        if (chdir(path)) {
+        if (_chdir(path)) {
                 lua_pushnil (L);
                 lua_pushfstring (L,"Unable to change working directory to '%s'\n%s\n",
                                 path, chdir_error);
@@ -170,7 +170,7 @@ static int get_dir (lua_State *L) {
   char *path;
   /* Passing (NULL, 0) is not guaranteed to work. Use a temp buffer and size instead. */
   char buf[LFS_MAXPATHLEN];
-  if ((path = getcwd(buf, LFS_MAXPATHLEN)) == NULL) {
+  if ((path = _getcwd(buf, LFS_MAXPATHLEN)) == NULL) {
     lua_pushnil(L);
     lua_pushstring(L, getcwd_error);
     return 2;
@@ -229,7 +229,7 @@ static int _file_lock (lua_State *L, FILE *fh, const char *mode, const long star
 #ifdef __BORLANDC__
         code = locking (fileno(fh), lkmode, len);
 #else
-        code = _locking (fileno(fh), lkmode, len);
+        code = _locking (_fileno(fh), lkmode, len);
 #endif
 #else
         struct flock f;
@@ -446,7 +446,7 @@ static int remove_dir (lua_State *L) {
         const char *path = luaL_checkstring (L, 1);
         int fail;
 
-        fail = rmdir (path);
+        fail = _rmdir (path);
 
         if (fail) {
                 lua_pushnil (L);
@@ -649,7 +649,7 @@ static int file_utime (lua_State *L) {
                 buf = NULL;
         else {
                 utb.actime = (time_t)luaL_optnumber (L, 2, 0);
-                utb.modtime = (time_t)luaL_optnumber (L, 3, utb.actime);
+                utb.modtime = (time_t)luaL_optnumber (L, 3, (lua_Number)utb.actime);
                 buf = &utb;
         }
         if (utime (file, buf)) {
@@ -692,15 +692,15 @@ static void push_st_rdev (lua_State *L, STAT_STRUCT *info) {
 }
 /* time of last access */
 static void push_st_atime (lua_State *L, STAT_STRUCT *info) {
-        lua_pushnumber (L, info->st_atime);
+        lua_pushnumber (L, (lua_Number)info->st_atime);
 }
 /* time of last data modification */
 static void push_st_mtime (lua_State *L, STAT_STRUCT *info) {
-        lua_pushnumber (L, info->st_mtime);
+        lua_pushnumber (L, (lua_Number)info->st_mtime);
 }
 /* time of last file status change */
 static void push_st_ctime (lua_State *L, STAT_STRUCT *info) {
-        lua_pushnumber (L, info->st_ctime);
+        lua_pushnumber (L, (lua_Number)info->st_ctime);
 }
 /* file size, in bytes */
 static void push_st_size (lua_State *L, STAT_STRUCT *info) {
